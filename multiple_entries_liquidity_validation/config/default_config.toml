@@ -1,0 +1,112 @@
+# =============================================================================
+# BACKTESTING CONFIGURATION
+# =============================================================================
+# This file contains all configurable parameters for the backtesting procedure.
+# This file is for backtesting multiple entries liquidity validation
+# strategy only.
+
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# GENERAL SETTINGS
+# -----------------------------------------------------------------------------
+[general]
+patterns = ["DBD", "DBR", "RBD", "RBR"]
+
+# ["DBD", "DBR", "RBD", "RBR"]
+# ["BR", "BD"]
+years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
+# [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+base_detection_timeframe = "1h"
+
+# -----------------------------------------------------------------------------
+# CURRENT STRATEGY
+# -----------------------------------------------------------------------------
+[strategy]
+fixed_tp = true
+price_level_tp = 2.2
+mountain_tp = false
+full_zone_one_r = false
+last_entry_one_r = false
+
+# -----------------------------------------------------------------------------
+# BASE DETECTION PARAMETERS
+# -----------------------------------------------------------------------------
+[base]
+max_range = 2.2
+candle_count = [1,5]
+
+# -----------------------------------------------------------------------------
+# MOVEMENT BEFORE BASE PARAMETERS
+# -----------------------------------------------------------------------------
+[movement_before]
+candle_count = [1,5]
+movement_range = [0.2, 2]
+progressive_movement = false
+body_min_percentage = 0.1
+min_strongest_candle_strength_score = 1.2
+min_weakest_candle_strength_score = 0.1
+
+# -----------------------------------------------------------------------------
+# MOVEMENT AFTER BASE PARAMETERS
+# -----------------------------------------------------------------------------
+[movement_after]
+candle_count = [1,5]
+movement_range = [0.2, 2]
+progressive_movement = true
+body_min_percentage = 0.4
+min_strongest_candle_strength_score = 1
+min_weakest_candle_strength_score = 0.1
+
+# -----------------------------------------------------------------------------
+# LIQUIDITY VALIDATION PARAMETERS
+# -----------------------------------------------------------------------------
+[liquidity_validation]
+validation = true
+timeout_hours = 70
+retracement_percentage_min = 0.7
+retracement_percentage_max = 0.95
+wick_allowed_during_validation = false
+
+# -----------------------------------------------------------------------------
+# TRADING PARAMETERS
+# -----------------------------------------------------------------------------
+[trading]
+entry_timeout_hours = 100
+exit_timeout_hours = 500
+entry_levels = [1.0, 0.8, 0.6, 0.4]
+entry_level_highlight = 0
+minus_base_range = false
+stop_loss_moved = 0.05
+
+
+# -----------------------------------------------------------------------------
+# RISK MANAGEMENT
+# -----------------------------------------------------------------------------
+[risk]
+capital = 1000
+zone_risk = 10
+entry_risk = 2.5
+
+# -----------------------------------------------------------------------------
+# FEE PARAMETERS
+# -----------------------------------------------------------------------------
+[fees]
+maker_fee = 0.0002
+taker_fee = 0.00055
+entry_threshold = 0.07         # Entry threshold is a percentage of how much can 
+                            # entry_fee be high.
+                            # 
+                            # entry_fee is calculated by full zone entry 
+                            # risking 1% of capital, and the entry_fee cannot 
+                            # be higher than 20% of the 1% of risking capital
+                            #
+                            # example:
+                            # capital = $1000, zone_risk = $10, 
+                            # zone_high = $100, zone_low = $99,
+                            # coin_amount = 10, entry_thr = 0.2,
+                            # zone_high * coin_amount * maker_fee = $0.2
+                            # 0.2 < 2 (20% of 1% of capital)
+
+
