@@ -1,6 +1,6 @@
 """
-Trade Plotter
-=============
+Trade Plotter - Claude Creator
+==============================
 
 Renders candlestick charts with zone overlays, entry levels, and exit markers.
 Reads zone data from zones.db and candle data from parquet files.
