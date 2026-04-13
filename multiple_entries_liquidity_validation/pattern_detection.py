@@ -2,9 +2,7 @@
 Pattern Detection
 =================
 
-???\
-This was ass.. rewrite it..
-???\
+Zone detector, finds usable zones for execution, on 1H chart.
 
 Detection Flow Shortly
 ----------------------
