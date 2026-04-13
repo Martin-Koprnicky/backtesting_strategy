@@ -94,6 +94,24 @@ All parameters live in `config/default_config.toml`. Key sections:
 python -m backtesting.multiple_entries_liquidity_validation.run
 ```
 
-Requires parquet data files for the configured years with 1H, 15M, 5M, and 1S timeframes, loaded via `data.data_handlers.get_data`.
+Results are printed as a PrettyTable with per-year stats. At the top is present a list of which patterns are we testing (Drop base Drop, Drop base Rally, Rally base Drop, Rally base Rally)
+Each year is tested independently.
 
-Results are printed as a PrettyTable with per-year stats: ending balance, fees, executed/unexecuted/unfinished zone counts, win rate, average win/loss, and highest win/loss.
+==============================
+'DBD', 'DBR', 'RBD', 'RBR'
+==============================
++------+--------------+--------+----------+--------------+--------------+-------------+---------------+----------+-----------+---------+----------+--------+---------+
+| Year | End. balance |  Fees  | E. zones | Unexe. zones | Unfin. zones | Entries hit | Avg entry hit | Win rate | Loss rate | Avg win | Avg loss | H. win | H. loss |
++------+--------------+--------+----------+--------------+--------------+-------------+---------------+----------+-----------+---------+----------+--------+---------+
+| 2018 |   1171.67    | 61.28  |    88    |      0       |      0       |     270     |      3.07     |  57.95   |   42.05   |  11.97  |  -11.85  |  41.2  |  -14.84 |
+| 2019 |   1295.49    | 48.91  |    64    |      0       |      0       |     184     |      2.88     |  67.19   |   32.81   |  12.48  |  -11.49  | 41.03  |  -14.47 |
+| 2020 |   1175.14    | 85.81  |    80    |      0       |      0       |     251     |      3.14     |   62.5   |    37.5   |  10.68  |  -11.97  | 40.85  |  -14.81 |
+| 2021 |   1093.54    | 80.71  |   104    |      0       |      0       |     327     |      3.14     |  57.69   |   42.31   |  10.06  |  -11.6   |  40.9  |  -13.41 |
+| 2022 |    974.23    | 95.68  |    93    |      0       |      0       |     296     |      3.18     |  58.06   |   41.94   |   8.35  |  -12.22  | 40.73  |  -14.83 |
+| 2023 |   1182.93    | 85.83  |    55    |      0       |      0       |     182     |      3.31     |  61.82   |   38.18   |  12.54  |  -11.59  | 40.83  |  -14.89 |
+| 2024 |    975.49    | 131.94 |   111    |      0       |      0       |     351     |      3.16     |  52.25   |   47.75   |  10.62  |  -12.08  | 40.69  |  -14.9  |
+| 2025 |    958.49    | 150.27 |    96    |      0       |      0       |     316     |      3.29     |  48.96   |   51.04   |  11.84  |  -12.2   | 40.81  |  -14.92 |
+| AVG  |   1103.37    | 92.55  |  86.38   |     0.0      |     0.0      |    272.12   |      3.15     |   58.3   |    41.7   |  11.07  |  -11.88  | 40.88  |  -14.63 |
++------+--------------+--------+----------+--------------+--------------+-------------+---------------+----------+-----------+---------+----------+--------+---------+
+
+Requires parquet data files for the configured years with 1H, 15M, 5M, and 1S timeframes. Data are not accessable, due to exceeding memory size of 10GB.
