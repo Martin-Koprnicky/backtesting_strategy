@@ -1,0 +1,11 @@
+2026-04-17 21:14:53,708 - INFO - Logging started.
+2026-04-17 21:14:53,708 - INFO - Round number of synchronization: 1
+2026-04-17 21:14:53,709 - DEBUG - Path in files to add: .DS_Store
+2026-04-17 21:14:53,709 - INFO - File copied from source/.DS_Store to replica/.DS_Store
+2026-04-17 21:14:53,709 - DEBUG - Path in files to add: first_folder
+2026-04-17 21:14:53,710 - INFO - Directory copied from source/first_folder to replica/first_folder
+2026-04-17 21:14:53,710 - DEBUG - Path in files to add: second_file.py
+2026-04-17 21:14:53,710 - INFO - File copied from source/second_file.py to replica/second_file.py
+2026-04-17 21:14:53,710 - DEBUG - Path in files to add: first_folder/first_file.py
+2026-04-17 21:14:53,710 - DEBUG - Path already handled: first_folder/first_file.py
+2026-04-17 21:14:53,710 - INFO - Logging stopped.
