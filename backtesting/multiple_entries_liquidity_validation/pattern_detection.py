@@ -2,7 +2,9 @@
 Pattern Detection
 =================
 
-Zone detector, finds usable zones for execution, on 1H chart.
+???\
+This was ass.. rewrite it..
+???\
 
 Detection Flow Shortly
 ----------------------
@@ -153,12 +155,14 @@ from dataclasses import dataclass, field
 from typing import Union, Optional
 from enum import Enum
 from datetime import datetime
+
 from backtesting.multiple_entries_liquidity_validation.config.log_config import Config
 from backtesting.multiple_entries_liquidity_validation.dataclasses import (
     ZoneType, PatternType, Direction, Zone, Base, StrongMovementBefore, 
     StrongMovementAfter, MovementCandle, CandleScores, MovementBefore, MovementAfter, 
     LQValidation
 )
+from data.numpy import numpy_arrays, cut_numpy_arrays
 
 @dataclass
 class Candle:
@@ -223,45 +227,6 @@ class PatternDetector:
         #print(f"Number of zones after killing overlapping: {len(self._zones)}")
 
         return self._zones
-
-    def _numpy_arrays(self, data: pd.DataFrame) -> dict:
-        """
-        Make numpy arrays from pandas DataFrame, for faster iteration.
-        
-        Args:
-            data : Input of OHLCV data
-        
-        Returns:
-            dict : keys: 'lows', 'highs', 'opens', 'closes', 'timestamps'
-        """
-        return {
-            'opens': data['open'].values,
-            'highs': data['high'].values,
-            'lows': data['low'].values,
-            'closes': data['close'].values,
-            'timestamps': data.index.values
-        }
-
-    def _cut_numpy_arrays(self, start_index: int, end_index: int, np_arrays: dict) -> dict:
-        """
-        Makes a cut in a array, for using less data
-
-        Args:
-            start_index : Starting index of the cut
-            end_index : Ending index of the cut
-            np_arrays : Full numpy arrays, which are being cut
-
-        Returns:
-            dict : keys: 'lows', 'highs', 'opens', 'closes', 'timestamps'
-        
-        """
-        return {
-            'opens': np_arrays['opens'][start_index:end_index],
-            'highs': np_arrays['highs'][start_index:end_index],
-            'lows': np_arrays['lows'][start_index:end_index],
-            'closes': np_arrays['closes'][start_index:end_index],
-            'timestamps': np_arrays['timestamps'][start_index:end_index],
-        }
     
     def _update_list(self, new_list: list[Zone]) -> None:
         """
@@ -278,7 +243,7 @@ class PatternDetector:
 
         # Set variables, numpy arrays as a data, count as a number of candles in a base, 
         # range as base range, empty valid_bases list
-        arrays = self._numpy_arrays(self._data)
+        arrays = numpy_arrays(self._data)
         count = self._config.base.candle_count
         range_ = self._config.base.max_range
         valid_bases = list()
@@ -300,7 +265,7 @@ class PatternDetector:
             for candle in range(len(arrays['lows']) - number):
 
                 # This cut gives me the exact number of candles I am checking for base
-                np_arrays = self._cut_numpy_arrays(
+                np_arrays = cut_numpy_arrays(
                     start_index=candle,
                     end_index=candle+number,
                     np_arrays=arrays,
@@ -520,7 +485,7 @@ class PatternDetector:
         """System, that validates movement after the base."""
 
         # Set variables, numpy arrays, configuration and movement after dataclass
-        arrays = self._numpy_arrays(self._data)
+        arrays = numpy_arrays(self._data)
         config = self._config.movement_after
         movement = zone.movement_after
         
@@ -540,7 +505,7 @@ class PatternDetector:
             return
 
         # Cut npmpy arrays based on indexes
-        cut_arrays = self._cut_numpy_arrays(start_idx, end_idx, arrays)
+        cut_arrays = cut_numpy_arrays(start_idx, end_idx, arrays)
 
         # Validation with candle direction and candle count
         self._check_direction(movement, cut_arrays, candle_count_values)
@@ -560,7 +525,7 @@ class PatternDetector:
         """System, that validates movement before the base."""
 
         # Set variables, numpy arrays, configuration and movement before dataclass
-        arrays = self._numpy_arrays(self._data)
+        arrays = numpy_arrays(self._data)
         config = self._config.movement_before
         movement = zone.movement_before
 
@@ -580,7 +545,7 @@ class PatternDetector:
             return
         
         # Cut npmpy arrays based on indexes
-        cut_arrays = self._cut_numpy_arrays(end_idx, start_idx, arrays)
+        cut_arrays = cut_numpy_arrays(end_idx, start_idx, arrays)
 
         # Validation with candle direction and candle count
         self._check_direction(movement, cut_arrays, candle_count_values)
@@ -813,7 +778,7 @@ class PatternDetector:
             # Set variables, zone start and end indexes, and numpy arrays as candles
             val_start_index = zone.movement_after.start_idx
             val_end_index = min(val_start_index + config.timeout_hours, len(data))
-            arrays = self._numpy_arrays(data=data.iloc[val_start_index:val_end_index])
+            arrays = numpy_arrays(data=data.iloc[val_start_index:val_end_index])
 
             # Set more variables, 
             high = None     # Highest High

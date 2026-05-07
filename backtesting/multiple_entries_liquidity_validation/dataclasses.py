@@ -146,7 +146,10 @@ class Position:
     entries: list[Entry] = None
     stop_loss: float = None
     take_profit: float = None
+
     entry_timestamp: datetime = None
+    entry_index: int = None
+
     exit_price: float = None
     exit_reason: ExitReason = None
     exit_timestamp: datetime = None
@@ -205,7 +208,7 @@ class TradeStatistics:
     @property
     def total_fees(self) -> float:
         return self.entry_fees + self.exit_fee
-
+    
 
 @dataclass
 class Zone:

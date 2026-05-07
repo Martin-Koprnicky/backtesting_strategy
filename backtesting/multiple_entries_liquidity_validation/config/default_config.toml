@@ -27,7 +27,7 @@ base_detection_timeframe = "1h"
 fixed_tp = true
 price_level_tp = 2.2
 mountain_tp = false
-full_zone_one_r = false
+full_zone_one_r = true
 last_entry_one_r = false
 
 # -----------------------------------------------------------------------------

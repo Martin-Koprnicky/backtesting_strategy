@@ -1,3 +1,0 @@
-"""
-Hello second_file
-"""

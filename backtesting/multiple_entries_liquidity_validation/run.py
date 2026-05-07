@@ -54,7 +54,7 @@ def run():
     data = None
 
     for year in years:
-        print(year)
+        #print(year)
         # If it's not last year, merge with one month of data of next year
         # so we could execute positions, that were spotted after Christmass.
         if year != years[-1]:
@@ -115,6 +115,8 @@ def run():
 
             # Position executor
             results, exe_zones = BacktestEngine(zones, config, data).run()
+
+        save_zones(year, exe_zones)
 
         # Append results into all_results list, so we could print them nicely
         all_results.append(results)
@@ -198,6 +200,28 @@ def _save_zones_csv(zones: list) -> None:
         
         for zone in zones:
             writer.writerow({'pattern': zone.pattern, 'pnl': round(zone.stats.netto, 2)})
+
+def save_zones(year, zones: list) -> None:
+    """
+    Saves zones for current year into csv file.
+
+    Args:
+        zones : List of executed zones for current year
+    """
+    with open('backtesting/multiple_entries_liquidity_validation/measure_zones.csv', mode='a', newline='') as file:
+        fieldnames = ['year', 'pattern', 'pnl', 'zone_high', 'zone_low', 'entry_timestamp']
+        writer = csv.DictWriter(file, fieldnames=fieldnames)    
+        writer.writeheader()
+
+        for zone in zones:
+            writer.writerow({
+                'year': year, 
+                'pattern': zone.pattern, 
+                'pnl': zone.stats.netto,
+                'zone_high': zone.base.high,
+                'zone_low': zone.base.low,
+                'entry_timestamp': zone.position.entry_timestamp
+            })
 
 def add_to_csv() -> None:
     """

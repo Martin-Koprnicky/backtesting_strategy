@@ -1,6 +1,6 @@
 """
-Trade Plotter - Claude Creator
-==============================
+Trade Plotter
+=============
 
 Renders candlestick charts with zone overlays, entry levels, and exit markers.
 Reads zone data from zones.db and candle data from parquet files.
@@ -406,6 +406,50 @@ class TradePlotter:
 
         ax.set_xticks(ticks)
         ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+
+    def plot_measurement(
+        self,
+        candles: pd.DataFrame,
+        zone_high: float,
+        zone_low: float,
+        zone_type: str,
+        title: str,
+        output_path: str
+    ) -> None:
+        """
+        Plot a simple candlestick chart with only the zone rectangle.
+        Used by Measurements to visualize price action around entry.
+        """
+        fig, ax = plt.subplots(1, 1, figsize=(20, 10))
+
+        self._draw_candlesticks(ax, candles)
+
+        # Zone rectangle
+        zone_color = '#4caf50' if zone_type == 'demand' else '#f44336'
+        width = len(candles)
+        rect = plt.Rectangle(
+            (0, zone_low), width, zone_high - zone_low,
+            facecolor=zone_color, alpha=0.15,
+            edgecolor=zone_color, linewidth=1.5,
+            linestyle='-', zorder=0
+        )
+        ax.add_patch(rect)
+
+        # Y-axis
+        min_price = candles['low'].min()
+        max_price = candles['high'].max()
+        price_range = max_price - min_price
+        ax.set_ylim(min_price - price_range * 0.02, max_price + price_range * 0.02)
+
+        # X-axis
+        self._set_x_labels(ax, candles, fmt='%m-%d %H:%M')
+
+        ax.set_title(title, fontsize=13, fontweight='bold')
+        ax.set_ylabel('Price (USDT)')
+
+        plt.tight_layout()
+        fig.savefig(output_path, dpi=150, bbox_inches='tight')
+        plt.close(fig)
 
     def _add_legend(self, ax) -> None:
         """Add a legend explaining the chart elements."""

@@ -35,25 +35,7 @@ from backtesting.multiple_entries_liquidity_validation.pattern_detection import 
 from backtesting.multiple_entries_liquidity_validation.dataclasses import (
     Entry, Position, ExitReason, TradeStatistics
 )
-
-def _numpy_arrays(data: pd.DataFrame) -> dict:
-        """
-        Make numpy arrays from pandas DataFrame, for faster iteration.
-        
-        Args:
-            data : Input of OHLCV data
-        
-        Returns:
-            dict : keys: 'lows', 'highs', 'opens', 'closes', 'timestamps'
-        """
-        return {
-            'opens': data['open'].values,
-            'highs': data['high'].values,
-            'lows': data['low'].values,
-            'closes': data['close'].values,
-            'timestamps': data.index.values
-        }
-
+from data.numpy import numpy_arrays
 
 
 class FeeValidator:
@@ -110,7 +92,7 @@ class DataWindow:
     def get_5m_window(self, start_idx: int, end_idx: int) -> pd.DataFrame:
         """Returns data window on 5m timeframe."""
 
-        return _numpy_arrays(self.data_5m.loc[start_idx:end_idx])
+        return numpy_arrays(self.data_5m.loc[start_idx:end_idx])
 
     def scan_execution(self, zone: Zone) -> None:
         """Scan of data, if price hit the zone."""
@@ -119,7 +101,7 @@ class DataWindow:
         end_time = start_time + pd.Timedelta(hours=self.config.trading.entry_timeout_hours)
         window = self.data_1h.loc[start_time:end_time]
 
-        h_arrays = _numpy_arrays(window)
+        h_arrays = numpy_arrays(window)
         h_lows = h_arrays['lows']
         h_highs = h_arrays['highs']
         h_timestamps = h_arrays['timestamps']
@@ -146,7 +128,7 @@ class DataWindow:
     def get_trading_window(self, zone: Zone) -> Optional[pd.DataFrame]:
         """Prepare trading window for executing the trade."""
 
-        m_arrays = _numpy_arrays(zone.scan_window)
+        m_arrays = numpy_arrays(zone.scan_window)
         m_lows = m_arrays['lows']
         m_highs = m_arrays['highs']
         m_timestamps = m_arrays['timestamps']
@@ -274,7 +256,7 @@ class PositionManager:
 
         strategy = self.config.strategy
 
-        arrays = _numpy_arrays(window_1s)
+        arrays = numpy_arrays(window_1s)
         highs = arrays['highs']
         lows = arrays['lows']
         timestamps = arrays['timestamps']

@@ -1,6 +1,6 @@
 """
-Backtesting Visualizer - Claude Creator
-=======================================
+Backtesting Visualizer
+======================
 
 Adapts backtesting Zone objects to the TradePlotter interface and generates
 overview + detail PNG charts for every executed zone.
@@ -150,6 +150,33 @@ class BacktestVisualizer:
         start_i = idx.searchsorted(record.validated_at, side='left')
         end_i   = min(len(idx) - 1, idx.searchsorted(end_ts, side='right'))
         return self._to_candles_df(self._data_5m.iloc[start_i : end_i + 1])
+
+    def plot_measurements(self, zones: list, output_dir: str = "backtesting/multiple_entries_liquidity_validation/visualizations/output") -> None:
+        from backtesting.multiple_entries_liquidity_validation.measurements import Zone as MeasureZone
+
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+
+        plotter = TradePlotter.__new__(TradePlotter)
+
+        for i, zone in enumerate(zones):
+            idx = self._data_1h.index
+            entry_i = idx.searchsorted(zone.entry_timestamp, side='left')
+
+            start_i = max(0, entry_i - 5)
+            end_i = min(len(idx) - 1, entry_i + 55)
+
+            df_slice = self._data_1h.iloc[start_i : end_i + 1]
+            candles = self._to_candles_df(df_slice)
+
+            if len(candles) < 2:
+                continue
+
+            zone_type = 'demand' if zone.is_demand else 'supply'
+            title = f"{zone.pattern}  |  PnL: {zone.pnl:+.2f}  |  {zone.entry_timestamp}"
+            filename = f"{i:04d}_{zone.entry_timestamp.strftime('%Y%m%d_%H%M')}_{zone.pattern}.png"
+
+            plotter.plot_measurement(candles, zone.high, zone.low, zone_type, title, str(out / filename))
 
     @staticmethod
     def _to_candles_df(df: pd.DataFrame) -> pd.DataFrame:
