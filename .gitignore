@@ -3,5 +3,5 @@ __pycache__/
 *.pyo
 .DS_Store
 logs/
-visualizations/output/
+**/visualizations/output/
 notes.md
