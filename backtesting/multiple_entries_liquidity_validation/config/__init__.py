@@ -1,4 +1,4 @@
-from backtesting.multiple_entries_liquidity_validation.config.log_config import (
+from backtesting.multiple_entries_liquidity_validation.config.settings import (
     Config,
     load_config,
     get_default_config,

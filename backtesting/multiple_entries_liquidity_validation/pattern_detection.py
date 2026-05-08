@@ -156,7 +156,7 @@ from typing import Union, Optional
 from enum import Enum
 from datetime import datetime
 
-from backtesting.multiple_entries_liquidity_validation.config.log_config import Config
+from backtesting.multiple_entries_liquidity_validation.config.settings import Config
 from backtesting.multiple_entries_liquidity_validation.dataclasses import (
     ZoneType, PatternType, Direction, Zone, Base, StrongMovementBefore, 
     StrongMovementAfter, MovementCandle, CandleScores, MovementBefore, MovementAfter, 
@@ -218,13 +218,9 @@ class PatternDetector:
         """
 
         self._find_base()
-        #print(f"Number of bases after base validation: {len(self._base_list)}")
         self._validate_strong_movements()
-        #print(f"Number of bases after movement validation: {len(self._movement_validation_list)}")
         self._validate_liquidity()
-        #print(f"Number of zones after liquidity validation: {len(self._liquidity_validation_list)}")
         self._kill_overlapping()
-        #print(f"Number of zones after killing overlapping: {len(self._zones)}")
 
         return self._zones
     
@@ -476,10 +472,6 @@ class PatternDetector:
                 valid_zones.append(zone)
 
         self._update_list(valid_zones)
-        
-        print(f"Single after validations: {single_after_validation}")
-        print(f"Single before validations: {single_before_validation}")
-        print(f"Both before and after validations: {both_before_and_after_validation}")
         
     def _validate_movement_after(self, zone: Zone) -> None:
         """System, that validates movement after the base."""

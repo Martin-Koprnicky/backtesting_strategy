@@ -2,7 +2,7 @@
 Measurements
 ============
 
-Purpose of this file is to measure price action after entry during certaion scenarios. 
+Purpose of this file is to measure price action after entry during certain scenarios. 
 One of the scenario is for example, price ripping through the zone in single candle, 
 therefore executing entry and stop loss in single hour. I am trying to understand,
 why does this happen, and if it's there any way how to prevent the execution at all.

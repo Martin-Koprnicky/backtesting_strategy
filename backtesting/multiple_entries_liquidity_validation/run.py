@@ -21,6 +21,7 @@ import csv
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('MacOSX')
+import logging
 
 from prettytable import PrettyTable
 from typing import List
@@ -28,15 +29,19 @@ from typing import List
 from data.data_handlers import get_data
 from backtesting.multiple_entries_liquidity_validation.pattern_detection import PatternDetector
 from backtesting.multiple_entries_liquidity_validation.trade_execution import BacktestEngine
-from backtesting.multiple_entries_liquidity_validation.config.log_config import load_config
+from backtesting.multiple_entries_liquidity_validation.config.settings import load_config
 from backtesting.multiple_entries_liquidity_validation.visualizations.visualizer import BacktestVisualizer
+from backtesting.multiple_entries_liquidity_validation.config.logging_config import get_logger
 
+logger = get_logger(level="DEBUG")
 
 def run():
     """This is the button, you wanna press to play!"""
+    logger.info("Backtesting run started.")
 
     # Load configuration for backtesting
     config = load_config("backtesting/multiple_entries_liquidity_validation/config/default_config.toml")
+    logger.info("Configuration loaded successfuly")
     patterns = config.general.patterns
     years = config.general.years
 
@@ -54,7 +59,7 @@ def run():
     data = None
 
     for year in years:
-        #print(year)
+        logger.info(f"YEAR TESTED: {year}")
         # If it's not last year, merge with one month of data of next year
         # so we could execute positions, that were spotted after Christmass.
         if year != years[-1]:
@@ -96,10 +101,12 @@ def run():
                 data_plus_month[f'{timeframe}'] = pd.concat([first_year, plus_month])
 
             # Pattern detector
+            logger.info(f"Pattern detection is starting")
             detector = PatternDetector(config, data_current_year['1h'], data_plus_month['1h'])
             zones = detector.detect_patterns()
 
             # Position executor
+            logger.info(f"Trade execution is starting")
             backtest_engine = BacktestEngine(zones, config, data_plus_month)
             results, exe_zones = backtest_engine.run()
 
@@ -110,10 +117,12 @@ def run():
                 data = data_next_year
 
             # Pattern detector
+            logger.info(f"Pattern detection is starting")
             detector = PatternDetector(config, data['1h'])
             zones = detector.detect_patterns()
 
             # Position executor
+            logger.info(f"Trade execution is starting")
             results, exe_zones = BacktestEngine(zones, config, data).run()
 
         save_zones(year, exe_zones)

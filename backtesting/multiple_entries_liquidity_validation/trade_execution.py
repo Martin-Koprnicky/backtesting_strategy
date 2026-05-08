@@ -26,16 +26,19 @@ Trading Flow
 
 import pandas as pd
 import numpy as np
+import logging
 
 from typing import Optional
 from copy import copy
 
-from backtesting.multiple_entries_liquidity_validation.config.log_config import Config
+from backtesting.multiple_entries_liquidity_validation.config.settings import Config
 from backtesting.multiple_entries_liquidity_validation.pattern_detection import Zone
 from backtesting.multiple_entries_liquidity_validation.dataclasses import (
     Entry, Position, ExitReason, TradeStatistics
 )
 from data.numpy import numpy_arrays
+
+logger = logging.getLogger(__name__)
 
 
 class FeeValidator:
@@ -501,8 +504,8 @@ class Portfolio:
         elif zone.position.is_active and zone.position.exit_price is None:
             self.unfinished_zones.append(zone)
         else:
-            # self._do_research(zone) if len(self.executed_zones) == 0
-                
+            
+            self._do_research(zone)    
             self.executed_zones.append(zone)
             self._update_portfolio(zone)
 
@@ -512,37 +515,37 @@ class Portfolio:
         entry_fees = zone.position.total_dollars * self.config.fees.maker_fee
         exit_dollar_amount = zone.position.exit_price * zone.position.total_coins
 
-        print(f"average entry price = {avg_price}")
-        print(f"zone position total dollar = {zone.position.total_dollars}")
-        print(f"entry fees = {zone.position.total_dollars * self.config.fees.maker_fee}")
-        print(f"exit dollar amount = {exit_dollar_amount}")
-        print(f"exit price = {zone.position.exit_price}")
+        logger.debug(f"average entry price = {avg_price}")
+        logger.debug(f"zone position total dollar = {zone.position.total_dollars}")
+        logger.debug(f"entry fees = {zone.position.total_dollars * self.config.fees.maker_fee}")
+        logger.debug(f"exit dollar amount = {exit_dollar_amount}")
+        logger.debug(f"exit price = {zone.position.exit_price}")
 
         if zone.position.exit_reason == ExitReason.STOP_LOSS:
             exit_fee = exit_dollar_amount * self.config.fees.taker_fee
         elif zone.position.exit_reason == ExitReason.TAKE_PROFIT:
             exit_fee = exit_dollar_amount * self.config.fees.maker_fee
 
-        print(f"exit fee = {exit_fee}")
+        logger.debug(f"exit fee = {exit_fee}")
 
         if zone.is_demand:
             brutto = (zone.position.exit_price - avg_price) * zone.position.total_coins
         elif zone.is_supply:
             brutto = (avg_price - zone.position.exit_price) * zone.position.total_coins
 
-        print(f"brutto = {brutto}")
+        logger.debug(f"brutto = {brutto}")
 
         total_fees = entry_fees + exit_fee
         netto = brutto - total_fees
 
-        print(f"total fees = {total_fees}")
-        print(f"netto = {netto}")
+        logger.debug(f"total fees = {total_fees}")
+        logger.debug(f"netto = {netto}")
 
-        print(f"current capital = {self.current_capital}")
+        logger.debug(f"before capital = {self.current_capital}")
 
         self.current_capital = self.current_capital + netto
 
-        print(f"current capital = {self.current_capital}")
+        logger.debug(f"after capital = {self.current_capital}")
 
 
     def _update_portfolio(self, zone: Zone) -> None:

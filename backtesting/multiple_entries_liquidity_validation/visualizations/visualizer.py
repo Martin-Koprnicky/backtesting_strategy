@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from backtesting.multiple_entries_liquidity_validation.config.log_config import Config
+from backtesting.multiple_entries_liquidity_validation.config.settings import Config
 from backtesting.multiple_entries_liquidity_validation.pattern_detection import Zone
 from backtesting.multiple_entries_liquidity_validation.visualizations.trade_plotter import TradePlotter, PlotConfig
 
