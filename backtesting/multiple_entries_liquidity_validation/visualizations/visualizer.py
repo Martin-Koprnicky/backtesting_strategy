@@ -1,6 +1,6 @@
 """
-Backtesting Visualizer
-======================
+Backtesting Visualizer - made by Claude AI
+==========================================
 
 Adapts backtesting Zone objects to the TradePlotter interface and generates
 overview + detail PNG charts for every executed zone.
