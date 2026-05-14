@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS "zones" (
     "id" INTEGER,
     "run_id" INTEGER,
     "year" INTEGER,
-    "zone_type" TEXT CHECK("zone_type" IN ('demand', 'supply')),
-    "pattern_type" TEXT CHECK("pattern_type" IN ('br', 'bd', 'rbr', 'rbd', 'dbr', 'dbd')),
+    "zone_type" TEXT,
+    "pattern_type" TEXT,
     "exit_reason" TEXT,
     "profit_loss_net" REAL,
     "total_fees" REAL,
@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS "configs" (
     "patterns" TEXT,
 
     -- STRATEGY
-    "tp_strategy" TEXT CHECK("tp_strategy" IN ('fixed_tp', 'mountain_tp')),
+    "tp_strategy" TEXT,
     "fixed_tp" REAL,
-    "one_r_strategy" TEXT CHECK("one_r_strategy" IN ('full_zone', 'last_entry')),
+    "one_r_strategy" TEXT,
 
     -- BASE
     "max_range" REAL,

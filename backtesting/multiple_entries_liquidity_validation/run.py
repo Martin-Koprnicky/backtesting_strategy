@@ -32,6 +32,7 @@ from backtesting.multiple_entries_liquidity_validation.trade_execution import Ba
 from backtesting.multiple_entries_liquidity_validation.config.settings import load_config
 from backtesting.multiple_entries_liquidity_validation.visualizations.visualizer import BacktestVisualizer
 from backtesting.multiple_entries_liquidity_validation.config.logging_config import get_logger
+from backtesting.multiple_entries_liquidity_validation.db.db_handler import run_handler
 
 logger = get_logger(level="DEBUG")
 
@@ -57,6 +58,8 @@ def run():
     print("="*7*len(patterns) + "==")
 
     data = None
+
+    executed_zones = []
 
     for year in years:
         logger.info(f"YEAR TESTED: {year}")
@@ -125,6 +128,12 @@ def run():
             logger.info(f"Trade execution is starting")
             results, exe_zones = BacktestEngine(zones, config, data).run()
 
+        
+        for zone in exe_zones:
+            zone.year = year
+        
+        executed_zones.extend(exe_zones)
+
         save_zones(year, exe_zones)
 
         # Append results into all_results list, so we could print them nicely
@@ -146,7 +155,8 @@ def run():
     # Save zones into csv file
     #_save_zones_csv([zone for year_zones in all_zones for zone in year_zones])
 
-    
+    # Save run into SQL database
+    run_handler(config, executed_zones)
 
 
     #tiers.print_zones()
@@ -219,8 +229,10 @@ def save_zones(year, zones: list) -> None:
     """
     with open('backtesting/multiple_entries_liquidity_validation/measure_zones.csv', mode='a', newline='') as file:
         fieldnames = ['year', 'pattern', 'pnl', 'zone_high', 'zone_low', 'entry_timestamp']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)    
-        writer.writeheader()
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+        
+        if file.tell() == 0:
+            writer.writeheader()
 
         for zone in zones:
             writer.writerow({

@@ -231,6 +231,8 @@ class Zone:
     # Some variables
     scan_window: pd.DataFrame = None
     time_before_entry: datetime = None
+
+    year: int = None
     
     @property
     def base_range(self) -> float:

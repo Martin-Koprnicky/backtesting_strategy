@@ -15,7 +15,7 @@ patterns = ["DBD", "DBR", "RBD", "RBR"]
 
 # ["DBD", "DBR", "RBD", "RBR"]
 # ["BR", "BD"]
-years = [2018, 2019]
+years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 
 # [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 base_detection_timeframe = "1h"

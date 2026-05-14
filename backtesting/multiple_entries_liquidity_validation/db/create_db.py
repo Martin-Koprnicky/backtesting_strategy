@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-def read_schema_sql(open_ = False):
+def read_schema_sql(keep_open = False):
     """Simple script for reading sql schema file."""
     # Create paths
     backtest_path = Path(__file__).parent / 'backtest.db'
@@ -19,8 +19,9 @@ def read_schema_sql(open_ = False):
     cursor.executescript(sql_content)
     connection.commit()
 
-    if open_:
+    if keep_open:
         return connection
     else:
         connection.close()
+        return None
 

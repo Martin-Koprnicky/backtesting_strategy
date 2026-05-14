@@ -2,12 +2,12 @@ import sqlite3
 
 from pathlib import Path
 from .create_db import read_schema_sql
-from multiple_entries_liquidity_validation.config import Config
+from backtesting.multiple_entries_liquidity_validation.config import Config
 
 
 def run_handler(config: Config, zones: list):
 
-    connection = read_schema_sql(open_=True)
+    connection = read_schema_sql(keep_open=True)
 
     cursor = connection.cursor()
 
@@ -69,8 +69,8 @@ def _insert_config(cursor, config) -> int:
 
         1 if config.movement_after.progressive_movement else 0,
         config.movement_after.body_min_percentage,
-        config.movement_after.min_strongest_candle_strength_score_after,
-        config.movement_after.min_weakest_candle_strength_score_after,
+        config.movement_after.min_strongest_candle_strength_score,
+        config.movement_after.min_weakest_candle_strength_score,
 
         config.liquidity.retracement_percentage_min,
         config.liquidity.retracement_percentage_max,
@@ -109,9 +109,9 @@ def _insert_zones(cursor, zones, run_id) -> None:
         """, (
             run_id,
             zone.year,
-            zone.type,
-            zone.pattern,
-            zone.position.exit_reason,
+            f"{zone.type}",
+            f"{zone.pattern}",
+            f"{zone.position.exit_reason}",
             zone.stats.netto,
             zone.stats.total_fees
         ))
