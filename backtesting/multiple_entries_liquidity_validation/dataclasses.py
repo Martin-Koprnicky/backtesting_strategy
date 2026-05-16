@@ -102,6 +102,7 @@ class LQValidation:
     """Stores info about liquidity validation."""
     validation_time: datetime = None
     validation_index: int = None
+    liquidity_dip: float = None
 
 @dataclass
 class MovementAfter:
@@ -250,4 +251,5 @@ class Zone:
     def starting_entry_price(self) -> float:
         entry_prices = [entry.price for entry in self.position.entries]
         return max(entry_prices) if self.is_demand else min(entry_prices)
+    
 

@@ -6,3 +6,5 @@ db/backtest.db
 logs/
 **/visualizations/output/
 notes.md
+measure_zones.csv
+zones.csv

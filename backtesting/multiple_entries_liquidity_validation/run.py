@@ -22,9 +22,11 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('MacOSX')
 import logging
+import shutil
 
 from prettytable import PrettyTable
 from typing import List
+from pathlib import Path
 
 from data.data_handlers import get_data
 from backtesting.multiple_entries_liquidity_validation.pattern_detection import PatternDetector
@@ -34,7 +36,7 @@ from backtesting.multiple_entries_liquidity_validation.visualizations.visualizer
 from backtesting.multiple_entries_liquidity_validation.config.logging_config import get_logger
 from backtesting.multiple_entries_liquidity_validation.db.db_handler import run_handler
 
-logger = get_logger(level="DEBUG")
+logger = get_logger(level="INFO")
 
 def run():
     """This is the button, you wanna press to play!"""
@@ -134,8 +136,6 @@ def run():
         
         executed_zones.extend(exe_zones)
 
-        save_zones(year, exe_zones)
-
         # Append results into all_results list, so we could print them nicely
         all_results.append(results)
 
@@ -152,15 +152,11 @@ def run():
     # Print results with prettytable
     _print_results(all_results, years)
 
-    # Save zones into csv file
-    #_save_zones_csv([zone for year_zones in all_zones for zone in year_zones])
+    # Save zones into csv file for ML purposes
+    _save_zones_csv(executed_zones)
 
     # Save run into SQL database
-    run_handler(config, executed_zones)
-
-
-    #tiers.print_zones()
-    #tiers.save_zones_csv()
+    #run_handler(config, executed_zones)
 
 def _print_results(all_results: List[dict], years: List[int]) -> None:
     """
@@ -206,29 +202,29 @@ def _print_results(all_results: List[dict], years: List[int]) -> None:
 
 def _save_zones_csv(zones: list) -> None:
     """
-    Save all zones into csv file.
-    
-    Args:
-        zones : List of all executed zones
-    """ 
-
-    with open('backtesting/multiple_entries_liquidity_validation/zones.csv', mode='w', newline='') as file:
-        fieldnames = ['pattern', 'pnl']
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        
-        for zone in zones:
-            writer.writerow({'pattern': zone.pattern, 'pnl': round(zone.stats.netto, 2)})
-
-def save_zones(year, zones: list) -> None:
-    """
     Saves zones for current year into csv file.
 
     Args:
         zones : List of executed zones for current year
     """
-    with open('backtesting/multiple_entries_liquidity_validation/measure_zones.csv', mode='a', newline='') as file:
-        fieldnames = ['year', 'pattern', 'pnl', 'zone_high', 'zone_low', 'entry_timestamp']
+    with open('backtesting/multiple_entries_liquidity_validation/measure_zones.csv', mode='w', newline='') as file:
+        fieldnames = [
+            'year',
+            'pnl',
+            'zone_type',
+            'pattern_type',
+            'base_candle_count',
+            'base_tightness_ratio',
+            'before_candle_count',
+            'before_strongest',
+            'before_weakest',
+            'before_average_with_strongest',
+            'after_candle_count',
+            'after_strongest',
+            'after_weakest',
+            'after_average_with_strongest',
+            'liquidity_dip'
+            ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         
         if file.tell() == 0:
@@ -236,13 +232,27 @@ def save_zones(year, zones: list) -> None:
 
         for zone in zones:
             writer.writerow({
-                'year': year, 
-                'pattern': zone.pattern, 
+                'year': zone.year,
                 'pnl': zone.stats.netto,
-                'zone_high': zone.base.high,
-                'zone_low': zone.base.low,
-                'entry_timestamp': zone.position.entry_timestamp
+                'zone_type': zone.type.value,
+                'pattern_type': zone.pattern.value,
+                'base_candle_count': zone.base.candle_count,
+                'base_tightness_ratio': zone.base.tightness_ratio,
+                'before_candle_count': zone.movement_before.candle_count,
+                'before_strongest': zone.movement_before.candle_scores.strongest,
+                'before_weakest': zone.movement_before.candle_scores.weakest,
+                'before_average_with_strongest': zone.movement_before.candle_scores.average_with_strongest,
+                'after_candle_count': zone.movement_after.candle_count,
+                'after_strongest': zone.movement_after.candle_scores.strongest,
+                'after_weakest': zone.movement_after.candle_scores.weakest,
+                'after_average_with_strongest': zone.movement_after.candle_scores.average_with_strongest,
+                'liquidity_dip': zone.lq_validation.liquidity_dip
             })
+
+def main():
+    run()
+    #add_to_csv()
+    #print_capital_chart()
 
 def add_to_csv() -> None:
     """
@@ -251,6 +261,7 @@ def add_to_csv() -> None:
     Mainly for adding index and capital, for later usage.
     """
 
+    shutil.copy('backtesting/multiple_entries_liquidity_validation/measure_zones.csv', 'backtesting/multiple_entries_liquidity_validation/zones.csv')
     df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/zones.csv')
 
     df['index'] = [i for i in range(len(df))]
@@ -270,17 +281,12 @@ def print_capital_chart() -> None:
     df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/zones.csv')
 
     plt.scatter(x=df['index'], y=df['capital'], s=5)
-    plt.xticks(range(0, len(df) + 1, 50))
+    plt.xticks(range(0, len(df) + 1, 100))
     plt.xlabel('Trade #')
     plt.ylabel('Capital')
     plt.title('Capital Growth')
     plt.savefig('backtesting/multiple_entries_liquidity_validation/capital_growth.png', dpi=150)
     plt.close()
-
-def main():
-    run()
-    #add_to_csv()
-    #print_capital_chart()
 
 if __name__ == "__main__":
     main()

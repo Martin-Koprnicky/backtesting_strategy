@@ -150,6 +150,7 @@ Usage:
 """
 
 import pandas as pd
+import logging
 
 from dataclasses import dataclass, field
 from typing import Union, Optional
@@ -163,6 +164,8 @@ from backtesting.multiple_entries_liquidity_validation.dataclasses import (
     LQValidation
 )
 from data.numpy import numpy_arrays, cut_numpy_arrays
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Candle:
@@ -549,10 +552,9 @@ class PatternDetector:
         # Validation with and candle range and sizes
         self._check_candles_range(zone, movement, cut_arrays, config)
         
-        """
         # Validation with candle strength
-        self._check_candles_strength(zone, movement, config_)
-        """
+        self._check_candles_strength(zone, movement, config)
+        
         
     def _check_direction(self, movement: Union[StrongMovementAfter, StrongMovementBefore], cut_arrays: dict, candle_count_values: list) -> None:
         """
@@ -738,7 +740,10 @@ class PatternDetector:
         movement.candle_scores = candle_scores
 
         # If scores are sufficient enough continue, else, zones gets invalidated
-        if weakest_score < config.min_weakest_candle_strength_score or strongest_score < config.min_strongest_candle_strength_score:
+        if isinstance(movement, StrongMovementBefore):
+            return
+
+        elif weakest_score < config.min_weakest_candle_strength_score or strongest_score < config.min_strongest_candle_strength_score:
             movement.validation = False
             return
 
@@ -874,7 +879,8 @@ class PatternDetector:
                         if bullish and candle_high > high:
                             zone.lq_validation = LQValidation(
                                 validation_time=candle_timestamp,
-                                validation_index=i
+                                validation_index=i,
+                                liquidity_dip=_ddip()
                             )
                             # Append valid zone to a list
                             valid_zones.append(zone)
@@ -932,7 +938,8 @@ class PatternDetector:
                         if bearish and candle_low < low:
                             zone.lq_validation = LQValidation(
                                 validation_time=candle_timestamp,
-                                validation_index=i
+                                validation_index=i,
+                                liquidity_dip=_sdip()
                             )
                             # Append valid zone to a list
                             valid_zones.append(zone)
