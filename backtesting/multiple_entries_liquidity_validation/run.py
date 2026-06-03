@@ -27,6 +27,8 @@ import shutil
 from prettytable import PrettyTable
 from typing import List
 from pathlib import Path
+from datetime import datetime
+from datetime import timezone
 
 from data.data_handlers import get_data
 from backtesting.multiple_entries_liquidity_validation.pattern_detection import PatternDetector
@@ -212,6 +214,8 @@ def _save_zones_csv(zones: list) -> None:
             'year',
             'pnl',
             'zone_type',
+            'base_high',
+            'base_low',
             'pattern_type',
             'base_candle_count',
             'base_tightness_ratio',
@@ -223,7 +227,10 @@ def _save_zones_csv(zones: list) -> None:
             'after_strongest',
             'after_weakest',
             'after_average_with_strongest',
-            'liquidity_dip'
+            'liquidity_dip',
+            'time_before_trade_minutes',
+            'entry_time',
+            'validation_time'
             ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         
@@ -236,6 +243,8 @@ def _save_zones_csv(zones: list) -> None:
                 'pnl': zone.stats.netto,
                 'zone_type': zone.type.value,
                 'pattern_type': zone.pattern.value,
+                'base_high': zone.base.high,
+                'base_low': zone.base.low,
                 'base_candle_count': zone.base.candle_count,
                 'base_tightness_ratio': zone.base.tightness_ratio,
                 'before_candle_count': zone.movement_before.candle_count,
@@ -246,7 +255,10 @@ def _save_zones_csv(zones: list) -> None:
                 'after_strongest': zone.movement_after.candle_scores.strongest,
                 'after_weakest': zone.movement_after.candle_scores.weakest,
                 'after_average_with_strongest': zone.movement_after.candle_scores.average_with_strongest,
-                'liquidity_dip': zone.lq_validation.liquidity_dip
+                'liquidity_dip': zone.lq_validation.liquidity_dip,
+                'time_before_trade_minutes': zone.time_before_entry,
+                'entry_time': zone.position.entry_timestamp,
+                'validation_time': datetime.fromisoformat(f'{zone.lq_validation.validation_time}').astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
             })
 
 def main():

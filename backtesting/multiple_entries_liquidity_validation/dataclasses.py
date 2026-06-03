@@ -106,7 +106,7 @@ class LQValidation:
 
 @dataclass
 class MovementAfter:
-    """For debug purpose only."""
+    """For debug purposes only."""
     check_direction: int = 0
     progressive_movement: int = 0
     candle_range: int = 0
@@ -114,7 +114,7 @@ class MovementAfter:
 
 @dataclass
 class MovementBefore:
-    """For debug purpose only."""
+    """For debug purposes only."""
     check_direction: int = 0
     progressive_movement: int = 0
     candle_range: int = 0
