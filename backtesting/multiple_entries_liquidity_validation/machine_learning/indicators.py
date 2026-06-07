@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 
-from typing import Literal
+from typing import Literal, Optional, Union
 
 class IndicatorCalculator:
-    def __init__(self):
+    def __init__(self, zones):
         pass
 
-    def sma(self, df: pd.DataFrame, period: int, ohlc: Literal['open', 'high', 'low', 'close'] = 'close') -> pd.DataFrame:
+    def sma(self, df: pd.DataFrame, period: int, ohlc: Literal['open', 'high', 'low', 'close'] = 'close') -> None:
         """
         Calculation of SMA values on DataFrame close values.
         
@@ -20,10 +20,35 @@ class IndicatorCalculator:
         """
 
         df[f'sma_{period}'] = df[f'{ohlc}'].rolling(period).mean()
+        s=1
+        print(f'shift by value: {s}')
+        df[f'sma_{period}_earlier'] = df[f'sma_{period}'].shift(s)
 
-        return df
     
-    def distance_SMA_from_zone(self, df: pd.DataFrame, zones: pd.DataFrame) -> pd.DataFrame:
+    def merge_zones_with_indi_vals(self, indi_vals_df: pd.DataFrame, zones: pd.DataFrame) -> pd.DataFrame:
+        """
+        Merge calculated indicator values with zones.
+
+        Args:
+            indi_vals_df : Calculated indicator values
+            zones : measure_zones.csv file
+
+        Return:
+            inner merged version of arguments by validation index
+        """
+
+        zones['validation_time'] = pd.to_datetime(zones['validation_time'])
+
+        # Exctract only rows that we want from df, so we can match it with zones
+
+        zones = pd.merge(indi_vals_df, zones, left_on=indi_vals_df.index, right_on='validation_time', how='inner')
+        
+        for column in ['close_time', 'open', 'high', 'low', 'close', 'volume_USDT']:
+            zones = zones.drop(column, axis=1)
+
+        return zones
+    
+    def distance_SMA_from_zone(self, zones: pd.DataFrame, periods: list[int]) -> None:
         """
         Calculation of distance of SMA from zone in zone measurement..
 
@@ -32,37 +57,48 @@ class IndicatorCalculator:
         Can be either positive or negative value, depends if the SMA is in our favour or not.
 
         Args:
-            df : Pandas DataFrame of OHLCV values
-            zones : Pandas DataFrame of zones
+            zones : zones with indicator values at validation timestamp
+            periods : indicator periods, in case of SMA or EMA 
+        """
+        
+        for period in periods:
+            conditions = [
+                (zones[f'sma_{period}'] > zones['base_low']) & (zones[f'sma_{period}'] < zones['base_high']),
+                zones[f'sma_{period}'] < zones['base_low'],
+                zones[f'sma_{period}'] > zones['base_high']
+            ]
 
-        Returns:
-            pandas.dataframe of zones with new column of distance value
+            results = [
+                0,
+                round(((zones['base_low'] - zones[f'sma_{period}']) * np.where(zones['zone_type'] == 1, -1, 1)) / (zones['base_high'] - zones['base_low']), 2),
+                round((zones[f'sma_{period}'] - zones['base_high']) * np.where(zones['zone_type'] == 0, -1, 1) / (zones['base_high'] - zones['base_low']), 2)
+            ]
+
+            zones[f'sma_{period}_distance_from_zone'] = np.select(conditions, results, default=0)
+
+
+    def direction_of_SMA_at_lq_validation(self, zones: pd.DataFrame, periods: list[int]) -> None:
+        """
+        Calculation of direction of SMA at lq validation point..
+
+        Args:
+            zones : zones with indicator values at validation timestamp
+            periods : indicator periods, in case of SMA or EMA 
         """
 
-        zones['validation_time'] = pd.to_datetime(zones['validation_time'])
-
-        # Exctract only rows that we want from df, so we can match it with zones
-        df_merged = pd.merge(df, zones, left_on=df.index, right_on='validation_time', how='inner')
-        
-        for column in ['close_time', 'open', 'high', 'low', 'close', 'volume_USDT']:
-            df_merged = df_merged.drop(column, axis=1)
-        
-        conditions = [
-            (df_merged['sma_20'] > df_merged['base_low']) & (df_merged['sma_20'] < df_merged['base_high']),
-            df_merged['sma_20'] < df_merged['base_low'],
-            df_merged['sma_20'] > df_merged['base_high']
-        ]
-
-        results = [
-            0,
-            round(((df_merged['base_low'] - df_merged['sma_20']) * np.where(df_merged['zone_type'] == 1, -1, 1)) / (df_merged['base_high'] - df_merged['base_low']), 2),
-            round((df_merged['sma_20'] - df_merged['base_high']) * np.where(df_merged['zone_type'] == 0, -1, 1) / (df_merged['base_high'] - df_merged['base_low']), 2)
-        ]
-
-        df_merged['distance_sma_from_zone'] = np.select(conditions, results, default=0)
-
-        return df_merged
+        for period in periods:
+            zones[f'sma_{period}_direction'] = np.where(zones[f'sma_{period}_earlier'] < zones[f'sma_{period}'], 1, -1)
+            zones[f'sma_{period}_direction'] = np.where(zones['zone_type'] == 1, zones[f'sma_{period}_direction']*1, zones[f'sma_{period}_direction']*(-1))
 
 
+    def lower_sma_vs_higher_sma(self, zones: pd.DataFrame, periods: list[int]) -> None:
+        """
+        Calculation of relationship between two SMAs.
+
+        Args:
+            zones : zones with indicator values at validation timestamp
+            periods : indicator periods, in case of SMA or EMA  
+        """
+        ...
 
 

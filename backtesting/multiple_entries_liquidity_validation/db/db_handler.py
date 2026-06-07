@@ -5,7 +5,7 @@ from .create_db import read_schema_sql
 from backtesting.multiple_entries_liquidity_validation.config import Config
 
 
-def run_handler(config: Config, zones: list):
+def run_handler(config: Config, zones: list ):
 
     connection = read_schema_sql(keep_open=True)
 

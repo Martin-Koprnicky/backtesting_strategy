@@ -51,16 +51,17 @@ def plot_impurity_based_feature_importance_comparison(m1, m2, X1, X2):
     plt.show()
 
 
-def plot_winners_losers_before_and_after(df) -> None:
+def plot_sma_distance_from_zone(df, period: int) -> None:
 
-    winners_before_avg = df[(df['year'] <= 2023) & (df['profitable'] > 0)]['distance_sma_from_zone'].mean()
-    winners_after_avg = df[(df['year'] >= 2024) & (df['profitable'] > 0)]['distance_sma_from_zone'].mean()
-    losers_before_avg = df[(df['year'] <= 2023) & (df['profitable'] <= 0)]['distance_sma_from_zone'].mean()
-    losers_after_avg = df[(df['year'] >= 2024) & (df['profitable'] <= 0)]['distance_sma_from_zone'].mean()
+    winners_before = df[(df['year'] <= 2023) & (df['profitable'] > 0)][f'sma_{period}_distance_from_zone'].std()
+    winners_after = df[(df['year'] >= 2024) & (df['profitable'] > 0)][f'sma_{period}_distance_from_zone'].std()
+    losers_before = df[(df['year'] <= 2023) & (df['profitable'] <= 0)][f'sma_{period}_distance_from_zone'].std()
+    losers_after = df[(df['year'] >= 2024) & (df['profitable'] <= 0)][f'sma_{period}_distance_from_zone'].std()
 
-    values = [winners_before_avg, winners_after_avg, losers_before_avg, losers_after_avg]
-    labels = ['winners_before_avg', 'winners_after_avg', 'losers_before_avg', 'losers_after_avg']
+    values = [winners_before, winners_after, losers_before, losers_after]
+    labels = ['winners_before_std', 'winners_after_std', 'losers_before_std', 'losers_after_std']
 
+    print(f"Distance values, SMA period: {period}")
     for val, lab in zip(values, labels):
         print(f"{lab} = {round(val,2)}")
 
@@ -72,5 +73,46 @@ def plot_winners_losers_before_and_after(df) -> None:
     ax.set_xticks(length)
     ax.set_xticklabels(labels, fontsize=12)
     ax.set_xlim(0, len(values))
+    ax.set_title(f"SMA {period} - Distance from zone")
+    fig.tight_layout()
+    plt.show()
+
+def plot_sma_direction(df, period: int) -> None:
+
+    # i need to make average on those variables.. cause i am summarizing it, and before has much more zones then after.. so make it weighted mean..
+    # then move on lower_sma_vs_higher_sma()
+
+    winners_before_favorable_dir = (df[(df['year'] <= 2023) & (df['profitable'] > 0)][f'sma_{period}_direction'] == 1).sum()
+    winners_after_favorable_dir = (df[(df['year'] >= 2024) & (df['profitable'] > 0)][f'sma_{period}_direction'] == 1).sum()
+    losers_before_favorable_dir = (df[(df['year'] <= 2023) & (df['profitable'] <= 0)][f'sma_{period}_direction'] == 1).sum()
+    losers_after_favorable_dir = (df[(df['year'] >= 2024) & (df['profitable'] <= 0)][f'sma_{period}_direction'] == 1).sum()
+
+    winners_before_unfavorable_dir = (df[(df['year'] <= 2023) & (df['profitable'] > 0)][f'sma_{period}_direction'] == -1).sum()
+    winners_after_unfavorable_dir = (df[(df['year'] >= 2024) & (df['profitable'] > 0)][f'sma_{period}_direction'] == -1).sum()
+    losers_before_unfavorable_dir = (df[(df['year'] <= 2023) & (df['profitable'] <= 0)][f'sma_{period}_direction'] == -1).sum()
+    losers_after_unfavorable_dir = (df[(df['year'] >= 2024) & (df['profitable'] <= 0)][f'sma_{period}_direction'] == -1).sum()
+
+    values = [
+        winners_before_favorable_dir, winners_after_favorable_dir, losers_before_favorable_dir, losers_after_favorable_dir,
+        winners_before_unfavorable_dir, winners_after_unfavorable_dir, losers_before_unfavorable_dir, losers_after_unfavorable_dir
+    ]
+    labels = [
+        'winners_before_favorable_dir', 'winners_after_favorable_dir', 'losers_before_favorable_dir', 'losers_after_favorable_dir',
+        'winners_before_unfavorable_dir', 'winners_after_unfavorable_dir', 'losers_before_unfavorable_dir', 'losers_after_unfavorable_dir'
+    ]
+
+    print(f"Direction values, SMA period: {period}")
+    for val, lab in zip(values, labels):
+        print(f"{lab} = {round(val,2)}")
+
+    fig, ax = plt.subplots(figsize=(14,10))
+
+    length = np.arange(0, len(values)) + 0.5
+
+    ax.bar(length, values, color='#B2D7D0')
+    ax.set_xticks(length)
+    ax.set_xticklabels(labels, fontsize=12)
+    ax.set_xlim(0, len(values))
+    ax.set_title(f"SMA {period} - Direction")
     fig.tight_layout()
     plt.show()

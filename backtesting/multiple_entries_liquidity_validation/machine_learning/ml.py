@@ -5,7 +5,8 @@ from data.data_handlers import get_data
 from backtesting.multiple_entries_liquidity_validation.machine_learning.helper_visu_functions import (
     plot_impurity_based_feature_importance_single_chart,
     plot_impurity_based_feature_importance_comparison,
-    plot_winners_losers_before_and_after
+    plot_sma_distance_from_zone,
+    plot_sma_direction
 )
 
 from backtesting.multiple_entries_liquidity_validation.machine_learning.indicators import IndicatorCalculator
@@ -23,7 +24,7 @@ def run_ml():
 
     df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
 
-    df, winners, losers = _modify_dataframe(df)
+    zones, winners, losers = _modify_dataframe(df)
 
     full_data = []
 
@@ -31,15 +32,24 @@ def run_ml():
         data = get_data(type='parquet', year=year, timeframes=['1h'])
         full_data.append(data['1h'])
 
-    pd_full_data = pd.concat(full_data)
+    indi_vals_df = pd.concat(full_data)
 
-    calculator = IndicatorCalculator()
+    calculator = IndicatorCalculator(zones)
 
-    data_with_sma = calculator.sma(df=pd_full_data, period=20)
+    periods = [20,9]
 
-    data_with_distances = calculator.distance_SMA_from_zone(data_with_sma, df)
+    for period in periods:
+        calculator.sma(df=indi_vals_df, period=period)
 
-    plot_winners_losers_before_and_after(data_with_distances)
+    merged_zones = calculator.merge_zones_with_indi_vals(indi_vals_df, zones)
+
+    calculator.distance_SMA_from_zone(merged_zones, periods)
+    calculator.direction_of_SMA_at_lq_validation(merged_zones, periods)
+    calculator.lower_sma_vs_higher_sma(merged_zones, periods)
+    
+    for period in periods:
+        plot_sma_distance_from_zone(merged_zones, period)
+        plot_sma_direction(merged_zones, period)
 
     return
     rfc_full_df, X_full_df, y_full_df = _random_forest_classifier(df)
