@@ -13,10 +13,10 @@ def _divide_zones(df: pd.DataFrame) -> list[pd.DataFrame]:
         df[(df['year'] > 2023) & (df['profitable'] <= 0)]
     ]
 
-def _plot_feature(values: list[float], labels: list[str], title: str) -> None:
+def _plot_feature(values: list[float], labels: list[str], title: str, pct: bool = False) -> None:
 
     for val, lab in zip(values, labels):
-        print(f"{lab} = {round(val,2)}")
+        print(f"{lab} = {round(val,2)}%" if pct else f"{lab} = {round(val,2)}")
 
     fig, ax = plt.subplots(figsize=(8,6))
 
@@ -28,13 +28,13 @@ def _plot_feature(values: list[float], labels: list[str], title: str) -> None:
     ax.set_xlim(0, len(values))
     ax.set_title(f"{title}")
     fig.tight_layout()
-    plt.show()
+    #plt.show()
 
-def _make_values_from_dfs(dfs: list[pd.DataFrame], column: str, agg_func: Literal['sum', 'count', 'mean', 'std'], pct: bool = False) -> list[float]:
+def _make_values_from_dfs(dfs: list[pd.DataFrame], column: str, agg_func: Literal['sum', 'count', 'mean', 'std'], pct: bool = False, raw_df: pd.DataFrame = None) -> list[float]:
 
     if pct:
-        zones_before = sum([(df[df['year'] <= 2023][column]).count() for df in dfs])
-        zones_after = sum([(df[df['year'] > 2023][column]).count() for df in dfs])
+        zones_before = (raw_df[raw_df['year'] <= 2023][column]).count()
+        zones_after = (raw_df[raw_df['year'] > 2023][column]).count()
 
         values = []
         for df in dfs:
@@ -54,6 +54,8 @@ def _get_labels(suffix: str = '') -> list[str]:
     
 def plot_sma_distance_from_zone(df: pd.DataFrame, period: int) -> None:
 
+    print(f"\nSMA {period}, distance from zone\n","-"*30)
+
     dfs = _divide_zones(df)
 
     values = _make_values_from_dfs(dfs, f'sma_{period}_distance_from_zone', 'std')
@@ -64,6 +66,8 @@ def plot_sma_distance_from_zone(df: pd.DataFrame, period: int) -> None:
     _plot_feature(values, labels, title)
 
 def plot_sma_direction(df: pd.DataFrame, period: int) -> None:
+
+    print(f"\nSMA {period}, direction with shift\n","-"*30)
 
     dfs = _divide_zones(df)
     column = f'sma_{period}_direction'
@@ -83,11 +87,13 @@ def plot_sma_direction(df: pd.DataFrame, period: int) -> None:
 
 def plot_sma_direction_pct(df: pd.DataFrame, period: int) -> None:
 
+    print(f"\nSMA {period}, direction with shift, by percentages\n","-"*30)
+
     dfs = _divide_zones(df)
     column = f'sma_{period}_direction'
 
-    favourables = _make_values_from_dfs([df[df[column] == 1] for df in dfs], column, 'count', pct=True)
-    unfavourables = _make_values_from_dfs([df[df[column] == -1] for df in dfs], column, 'count', pct=True)
+    favourables = _make_values_from_dfs([df[df[column] == 1] for df in dfs], column, 'count', pct=True, raw_df=df)
+    unfavourables = _make_values_from_dfs([df[df[column] == -1] for df in dfs], column, 'count', pct=True, raw_df=df)
 
     fav_labels = _get_labels('_fav_count_pct')
     unfav_labels = _get_labels('_unfav_count_pct')
@@ -97,11 +103,45 @@ def plot_sma_direction_pct(df: pd.DataFrame, period: int) -> None:
     
     title = f"SMA {period} - Direction percentage"
 
-    _plot_feature(values, labels, title)
+    _plot_feature(values, labels, title, pct=True)
 
 
-def plot_lower_sma_vs_higher_sma(df) -> None:
+def plot_lower_sma_vs_higher_sma(df: pd.DataFrame, periods: list[int]) -> None:
+
+    print(f"\nSMA {min(periods)} vs SMA {max(periods)}\n","-"*30)
 
     dfs = _divide_zones(df)
+    column = f'sma_{min(periods)}_vs_sma_{max(periods)}'
 
-    favs = _make_values_from_dfs(dfs, )
+    favourables = _make_values_from_dfs([df[df[column] == 1] for df in dfs], column, 'count')
+    unfavourables = _make_values_from_dfs([df[df[column] == -1] for df in dfs], column, 'count')
+
+    fav_labels = _get_labels('_fav_count')
+    unfav_labels = _get_labels('_unfav_count')
+
+    values = [*favourables, *unfavourables]
+    labels = [*fav_labels, *unfav_labels]
+
+    title = f"SMA {min(periods)} vs SMA {max(periods)} - Relationship"
+
+    _plot_feature(values, labels, title)
+
+def plot_lower_sma_vs_higher_sma_pct(df: pd.DataFrame, periods: list[int]) -> None:
+
+    print(f"\nSMA {min(periods)} vs SMA {max(periods)}, by percentages\n","-"*30)
+
+    dfs = _divide_zones(df)
+    column = f'sma_{min(periods)}_vs_sma_{max(periods)}'
+
+    favourables = _make_values_from_dfs([df[df[column] == 1] for df in dfs], column, 'count', pct=True, raw_df=df)
+    unfavourables = _make_values_from_dfs([df[df[column] == -1] for df in dfs], column, 'count', pct=True, raw_df=df)
+
+    fav_labels = _get_labels('_fav_count_pct')
+    unfav_labels = _get_labels('_unfav_count_pct')
+
+    values = [*favourables, *unfavourables]
+    labels = [*fav_labels, *unfav_labels]
+
+    title = f"SMA {min(periods)} vs SMA {max(periods)} - Relationship percentage"
+
+    _plot_feature(values, labels, title, pct=True)

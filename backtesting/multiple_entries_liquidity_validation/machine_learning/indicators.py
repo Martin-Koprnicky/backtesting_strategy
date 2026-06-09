@@ -20,7 +20,6 @@ class IndicatorCalculator:
         """
 
         df[f'sma_{period}'] = df[f'{ohlc}'].rolling(period).mean()
-        print(f'shift by value: {shift}')
         df[f'sma_{period}_earlier'] = df[f'sma_{period}'].shift(shift)
 
     
@@ -101,8 +100,10 @@ class IndicatorCalculator:
         higher_period = max(periods)
         lower_period = min(periods)
 
-        zones[f'sma_{lower_period}_vs_sma_{higher_period}'] = np.where(zones[f'sma_{lower_period}'] < zones[f'sma_{higher_period}'], 1, -1)
-        zones[f'sma_{lower_period}_vs_sma_{higher_period}'] = np.where(zones['zone_type'] == 1, zones[f'sma_{lower_period}_vs_sma_{higher_period}']*1, zones[f'sma_{lower_period}_vs_sma_{higher_period}']*(-1))
+        column = f'sma_{lower_period}_vs_sma_{higher_period}'
+
+        zones[column] = np.where(zones[f'sma_{lower_period}'] < zones[f'sma_{higher_period}'], 1, -1)
+        zones[column] = np.where(zones['zone_type'] == 1, zones[column]*1, zones[column]*(-1))
         
 
 

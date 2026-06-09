@@ -12,6 +12,7 @@ from backtesting.multiple_entries_liquidity_validation.machine_learning.features
     plot_sma_direction,
     plot_sma_direction_pct,
     plot_lower_sma_vs_higher_sma,
+    plot_lower_sma_vs_higher_sma_pct
 )
 
 from backtesting.multiple_entries_liquidity_validation.machine_learning.indicators import IndicatorCalculator
@@ -28,6 +29,8 @@ random_state = 44
 def run_ml():
 
     for i in [1, 5, 10, 20]:
+
+        print(f"Shift value: {i}")
 
         df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
 
@@ -55,11 +58,13 @@ def run_ml():
         calculator.lower_sma_vs_higher_sma(merged_zones, periods)
         
         for period in periods:
+            
             plot_sma_distance_from_zone(merged_zones, period)
             plot_sma_direction(merged_zones, period)
             plot_sma_direction_pct(merged_zones, period)
         
-        #plot_lower_sma_vs_higher_sma(merged_zones)
+        plot_lower_sma_vs_higher_sma(merged_zones, periods)
+        plot_lower_sma_vs_higher_sma_pct(merged_zones, periods)
 
     return
     rfc_full_df, X_full_df, y_full_df = _random_forest_classifier(df)
