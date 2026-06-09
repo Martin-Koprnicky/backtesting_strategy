@@ -7,7 +7,7 @@ class IndicatorCalculator:
     def __init__(self, zones):
         pass
 
-    def sma(self, df: pd.DataFrame, period: int, ohlc: Literal['open', 'high', 'low', 'close'] = 'close') -> None:
+    def sma(self, df: pd.DataFrame, period: int, ohlc: Literal['open', 'high', 'low', 'close'] = 'close', shift: int = 1) -> None:
         """
         Calculation of SMA values on DataFrame close values.
         
@@ -20,9 +20,8 @@ class IndicatorCalculator:
         """
 
         df[f'sma_{period}'] = df[f'{ohlc}'].rolling(period).mean()
-        s=1
-        print(f'shift by value: {s}')
-        df[f'sma_{period}_earlier'] = df[f'sma_{period}'].shift(s)
+        print(f'shift by value: {shift}')
+        df[f'sma_{period}_earlier'] = df[f'sma_{period}'].shift(shift)
 
     
     def merge_zones_with_indi_vals(self, indi_vals_df: pd.DataFrame, zones: pd.DataFrame) -> pd.DataFrame:
@@ -99,6 +98,11 @@ class IndicatorCalculator:
             zones : zones with indicator values at validation timestamp
             periods : indicator periods, in case of SMA or EMA  
         """
-        ...
+        higher_period = max(periods)
+        lower_period = min(periods)
+
+        zones[f'sma_{lower_period}_vs_sma_{higher_period}'] = np.where(zones[f'sma_{lower_period}'] < zones[f'sma_{higher_period}'], 1, -1)
+        zones[f'sma_{lower_period}_vs_sma_{higher_period}'] = np.where(zones['zone_type'] == 1, zones[f'sma_{lower_period}_vs_sma_{higher_period}']*1, zones[f'sma_{lower_period}_vs_sma_{higher_period}']*(-1))
+        
 
 

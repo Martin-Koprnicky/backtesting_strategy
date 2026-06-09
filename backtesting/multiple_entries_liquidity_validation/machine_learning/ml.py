@@ -2,11 +2,16 @@ import pandas as pd
 import numpy as np
 
 from data.data_handlers import get_data
-from backtesting.multiple_entries_liquidity_validation.machine_learning.helper_visu_functions import (
+from backtesting.multiple_entries_liquidity_validation.machine_learning.models_plots import (
     plot_impurity_based_feature_importance_single_chart,
     plot_impurity_based_feature_importance_comparison,
+    
+)
+from backtesting.multiple_entries_liquidity_validation.machine_learning.features_plots import (
     plot_sma_distance_from_zone,
-    plot_sma_direction
+    plot_sma_direction,
+    plot_sma_direction_pct,
+    plot_lower_sma_vs_higher_sma,
 )
 
 from backtesting.multiple_entries_liquidity_validation.machine_learning.indicators import IndicatorCalculator
@@ -22,34 +27,39 @@ random_state = 44
 
 def run_ml():
 
-    df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
+    for i in [1, 5, 10, 20]:
 
-    zones, winners, losers = _modify_dataframe(df)
+        df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
 
-    full_data = []
+        zones, winners, losers = _modify_dataframe(df)
 
-    for year in [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]:
-        data = get_data(type='parquet', year=year, timeframes=['1h'])
-        full_data.append(data['1h'])
+        full_data = []
 
-    indi_vals_df = pd.concat(full_data)
+        for year in [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]:
+            data = get_data(type='parquet', year=year, timeframes=['1h'])
+            full_data.append(data['1h'])
 
-    calculator = IndicatorCalculator(zones)
+        indi_vals_df = pd.concat(full_data)
 
-    periods = [20,9]
+        calculator = IndicatorCalculator(zones)
 
-    for period in periods:
-        calculator.sma(df=indi_vals_df, period=period)
+        periods = [20,9]
 
-    merged_zones = calculator.merge_zones_with_indi_vals(indi_vals_df, zones)
+        for period in periods:
+            calculator.sma(df=indi_vals_df, period=period, shift=i)
 
-    calculator.distance_SMA_from_zone(merged_zones, periods)
-    calculator.direction_of_SMA_at_lq_validation(merged_zones, periods)
-    calculator.lower_sma_vs_higher_sma(merged_zones, periods)
-    
-    for period in periods:
-        plot_sma_distance_from_zone(merged_zones, period)
-        plot_sma_direction(merged_zones, period)
+        merged_zones = calculator.merge_zones_with_indi_vals(indi_vals_df, zones)
+
+        calculator.distance_SMA_from_zone(merged_zones, periods)
+        calculator.direction_of_SMA_at_lq_validation(merged_zones, periods)
+        calculator.lower_sma_vs_higher_sma(merged_zones, periods)
+        
+        for period in periods:
+            plot_sma_distance_from_zone(merged_zones, period)
+            plot_sma_direction(merged_zones, period)
+            plot_sma_direction_pct(merged_zones, period)
+        
+        #plot_lower_sma_vs_higher_sma(merged_zones)
 
     return
     rfc_full_df, X_full_df, y_full_df = _random_forest_classifier(df)
