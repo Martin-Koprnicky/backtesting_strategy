@@ -12,7 +12,9 @@ from backtesting.multiple_entries_liquidity_validation.machine_learning.features
     plot_sma_direction,
     plot_sma_direction_pct,
     plot_lower_sma_vs_higher_sma,
-    plot_lower_sma_vs_higher_sma_pct
+    plot_lower_sma_vs_higher_sma_pct,
+    plot_momentum_magnitude_gap,
+    plot_momentum_magnitude_diff,
 )
 
 from backtesting.multiple_entries_liquidity_validation.machine_learning.indicators import IndicatorCalculator
@@ -28,9 +30,25 @@ random_state = 44
 
 def run_ml():
 
-    for i in [1, 5, 10, 20]:
+    #run_sma()
+    run_momentum_magnitude()
 
-        print(f"Shift value: {i}")
+    return
+    rfc_full_df, X_full_df, y_full_df = _random_forest_classifier(df)
+    rfc_winners, X_winners, y_winners = _random_forest_classifier(winners)
+    rfc_losers, X_losers, y_losers = _random_forest_classifier(losers)
+    
+    
+    # Helper code to visualize the feature importance using 'MDI'
+    #plot_impurity_based_feature_importance_single_chart(rfc_full_df, X_full_df)
+    #plot_impurity_based_feature_importance_comparison(rfc_winners, rfc_losers, X_winners, X_losers)
+
+
+def run_sma():
+
+    for shift in [1, 5, 10, 20]:
+
+        print(f"Shift value: {shift}")
 
         df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
 
@@ -44,17 +62,17 @@ def run_ml():
 
         indi_vals_df = pd.concat(full_data)
 
-        calculator = IndicatorCalculator(zones)
+        calculator = IndicatorCalculator()
 
         periods = [20,9]
 
         for period in periods:
-            calculator.sma(df=indi_vals_df, period=period, shift=i)
+            calculator.sma(indi_vals_df, period, shift=shift)
 
         merged_zones = calculator.merge_zones_with_indi_vals(indi_vals_df, zones)
 
         calculator.distance_SMA_from_zone(merged_zones, periods)
-        calculator.direction_of_SMA_at_lq_validation(merged_zones, periods)
+        calculator.direction_of_SMA_at_lq_validation(merged_zones, periods, shift)
         calculator.lower_sma_vs_higher_sma(merged_zones, periods)
         
         for period in periods:
@@ -66,15 +84,38 @@ def run_ml():
         plot_lower_sma_vs_higher_sma(merged_zones, periods)
         plot_lower_sma_vs_higher_sma_pct(merged_zones, periods)
 
-    return
-    rfc_full_df, X_full_df, y_full_df = _random_forest_classifier(df)
-    rfc_winners, X_winners, y_winners = _random_forest_classifier(winners)
-    rfc_losers, X_losers, y_losers = _random_forest_classifier(losers)
-    
-    
-    # Helper code to visualize the feature importance using 'MDI'
-    #plot_impurity_based_feature_importance_single_chart(rfc_full_df, X_full_df)
-    #plot_impurity_based_feature_importance_comparison(rfc_winners, rfc_losers, X_winners, X_losers)
+
+def run_momentum_magnitude():
+
+    for shift in [1, 5, 10, 20]:
+
+        print(f"Shift value: {shift}")
+
+        df = pd.read_csv('backtesting/multiple_entries_liquidity_validation/measure_zones.csv')
+
+        zones, winners, losers = _modify_dataframe(df)
+
+        full_data = []
+
+        for year in [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]:
+            data = get_data(type='parquet', year=year, timeframes=['1h'])
+            full_data.append(data['1h'])
+
+        indi_vals_df = pd.concat(full_data)
+
+        calculator = IndicatorCalculator()
+
+        periods = [20,9]
+
+        for period in periods:
+            calculator.sma(indi_vals_df, period, shift=shift)
+
+        merged_zones = calculator.merge_zones_with_indi_vals(indi_vals_df, zones)
+
+        calculator.momentum_magnitude_of_lower_sma_and_higher_sma(merged_zones, periods, shift)
+
+        plot_momentum_magnitude_gap(merged_zones, periods)
+        plot_momentum_magnitude_diff(merged_zones, periods, shift)
 
 
 def _get_fraction_of_data(data: pd.DataFrame, measuring_time: datetime, period: int) -> pd.DataFrame:

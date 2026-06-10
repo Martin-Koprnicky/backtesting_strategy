@@ -1,11 +1,18 @@
 import pandas as pd
 import numpy as np
+import math
 
 from typing import Literal, Optional, Union
 
 class IndicatorCalculator:
-    def __init__(self, zones):
+    def __init__(self):
         pass
+
+
+    # =============================================================================
+    # SIMPLE MOVING AVERAGE
+    # =============================================================================
+
 
     def sma(self, df: pd.DataFrame, period: int, ohlc: Literal['open', 'high', 'low', 'close'] = 'close', shift: int = 1) -> None:
         """
@@ -20,9 +27,8 @@ class IndicatorCalculator:
         """
 
         df[f'sma_{period}'] = df[f'{ohlc}'].rolling(period).mean()
-        df[f'sma_{period}_earlier'] = df[f'sma_{period}'].shift(shift)
+        df[f'sma_{period}_shift_by_{shift}'] = df[f'sma_{period}'].shift(shift)
 
-    
     def merge_zones_with_indi_vals(self, indi_vals_df: pd.DataFrame, zones: pd.DataFrame) -> pd.DataFrame:
         """
         Merge calculated indicator values with zones.
@@ -45,7 +51,7 @@ class IndicatorCalculator:
             zones = zones.drop(column, axis=1)
 
         return zones
-    
+
     def distance_SMA_from_zone(self, zones: pd.DataFrame, periods: list[int]) -> None:
         """
         Calculation of distance of SMA from zone in zone measurement..
@@ -74,8 +80,7 @@ class IndicatorCalculator:
 
             zones[f'sma_{period}_distance_from_zone'] = np.select(conditions, results, default=0)
 
-
-    def direction_of_SMA_at_lq_validation(self, zones: pd.DataFrame, periods: list[int]) -> None:
+    def direction_of_SMA_at_lq_validation(self, zones: pd.DataFrame, periods: list[int], shift: int = 1) -> None:
         """
         Calculation of direction of SMA at lq validation point..
 
@@ -85,9 +90,10 @@ class IndicatorCalculator:
         """
 
         for period in periods:
-            zones[f'sma_{period}_direction'] = np.where(zones[f'sma_{period}_earlier'] < zones[f'sma_{period}'], 1, -1)
-            zones[f'sma_{period}_direction'] = np.where(zones['zone_type'] == 1, zones[f'sma_{period}_direction']*1, zones[f'sma_{period}_direction']*(-1))
+            column = f'sma_{period}_direction'
 
+            zones[column] = np.where(zones[f'sma_{period}_shift_by_{shift}'] < zones[f'sma_{period}'], 1, -1)
+            zones[column] = np.where(zones['zone_type'] == 1, zones[column]*1, zones[column]*(-1))
 
     def lower_sma_vs_higher_sma(self, zones: pd.DataFrame, periods: list[int]) -> None:
         """
@@ -102,8 +108,37 @@ class IndicatorCalculator:
 
         column = f'sma_{lower_period}_vs_sma_{higher_period}'
 
-        zones[column] = np.where(zones[f'sma_{lower_period}'] < zones[f'sma_{higher_period}'], 1, -1)
+        zones[column] = np.where(zones[f'sma_{lower_period}'] > zones[f'sma_{higher_period}'], 1, -1)
         zones[column] = np.where(zones['zone_type'] == 1, zones[column]*1, zones[column]*(-1))
         
 
+    # =============================================================================
+    # MOMENTUM MAGNITUDE OF SMA
+    # =============================================================================
+
+
+    def momentum_magnitude_of_lower_sma_and_higher_sma(self, zones: pd.DataFrame, periods: list[int], shift: int = 1) -> None:
+        """
+        Calculation of momentum magnitude of SMAs during zone creation.
+
+        Relation between two SMAs is one method above,
+        now we focus on momentum of those two SMAs. If the gap between them is accelerating or fading.
+        
+        Args:
+            zones : zones with indicator values at validation timestamp
+            periods: indicator periods, in case of SMA or EMA
+        """
+
+        zone_range = zones['base_high'] - zones['base_low']
+
+        column_now = 'momentum_magnitude_gap'
+        column_before = f'momentum_magnitude_gap_shift_by_{shift}'
+        
+        zones[column_now] = (zones[f'sma_{min(periods)}'] - zones[f'sma_{max(periods)}']) / zone_range
+        zones[column_now] = np.where(zones['zone_type'] == 1, zones[column_now]*1, zones[column_now]*(-1))
+
+        zones[column_before] = (zones[f'sma_{min(periods)}_shift_by_{shift}'] - zones[f'sma_{max(periods)}_shift_by_{shift}']) / zone_range
+        zones[column_before] = np.where(zones['zone_type'] == 1, zones[column_before]*1, zones[column_before]*(-1))
+
+        zones[f'momentum_magnitude_diff_shift_by_{shift}'] = zones[column_now] - zones[column_before]
 

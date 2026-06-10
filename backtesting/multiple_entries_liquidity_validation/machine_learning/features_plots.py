@@ -4,6 +4,11 @@ import numpy as np
 
 from typing import Literal
 
+# =============================================================================
+# CORE PLOT METHODS
+# =============================================================================
+
+
 def _divide_zones(df: pd.DataFrame) -> list[pd.DataFrame]:
 
     return  [
@@ -28,7 +33,7 @@ def _plot_feature(values: list[float], labels: list[str], title: str, pct: bool 
     ax.set_xlim(0, len(values))
     ax.set_title(f"{title}")
     fig.tight_layout()
-    #plt.show()
+    plt.show()
 
 def _make_values_from_dfs(dfs: list[pd.DataFrame], column: str, agg_func: Literal['sum', 'count', 'mean', 'std'], pct: bool = False, raw_df: pd.DataFrame = None) -> list[float]:
 
@@ -49,12 +54,17 @@ def _make_values_from_dfs(dfs: list[pd.DataFrame], column: str, agg_func: Litera
 
 def _get_labels(suffix: str = '') -> list[str]:
 
-    base = ['winners_before', 'losers_before', 'winners_after', 'losers_after']
-    return [f'{label}{suffix}' for label in base]
-    
+    return [f'{label}{suffix}' for label in ['winners_before', 'losers_before', 'winners_after', 'losers_after']]
+
+
+# =============================================================================
+# SIMPLE MOVING AVERAGE
+# =============================================================================
+
+
 def plot_sma_distance_from_zone(df: pd.DataFrame, period: int) -> None:
 
-    print(f"\nSMA {period}, distance from zone\n","-"*30)
+    print(f"\nSMA {period}, distance from zone\n", "-"*30, sep="")
 
     dfs = _divide_zones(df)
 
@@ -67,7 +77,7 @@ def plot_sma_distance_from_zone(df: pd.DataFrame, period: int) -> None:
 
 def plot_sma_direction(df: pd.DataFrame, period: int) -> None:
 
-    print(f"\nSMA {period}, direction with shift\n","-"*30)
+    print(f"\nSMA {period}, direction with shift\n", "-"*30, sep="")
 
     dfs = _divide_zones(df)
     column = f'sma_{period}_direction'
@@ -87,7 +97,7 @@ def plot_sma_direction(df: pd.DataFrame, period: int) -> None:
 
 def plot_sma_direction_pct(df: pd.DataFrame, period: int) -> None:
 
-    print(f"\nSMA {period}, direction with shift, by percentages\n","-"*30)
+    print(f"\nSMA {period}, direction with shift, by percentages\n", "-"*30, sep="")
 
     dfs = _divide_zones(df)
     column = f'sma_{period}_direction'
@@ -105,10 +115,9 @@ def plot_sma_direction_pct(df: pd.DataFrame, period: int) -> None:
 
     _plot_feature(values, labels, title, pct=True)
 
-
 def plot_lower_sma_vs_higher_sma(df: pd.DataFrame, periods: list[int]) -> None:
 
-    print(f"\nSMA {min(periods)} vs SMA {max(periods)}\n","-"*30)
+    print(f"\nSMA {min(periods)} vs SMA {max(periods)}\n", "-"*30, sep="")
 
     dfs = _divide_zones(df)
     column = f'sma_{min(periods)}_vs_sma_{max(periods)}'
@@ -128,7 +137,7 @@ def plot_lower_sma_vs_higher_sma(df: pd.DataFrame, periods: list[int]) -> None:
 
 def plot_lower_sma_vs_higher_sma_pct(df: pd.DataFrame, periods: list[int]) -> None:
 
-    print(f"\nSMA {min(periods)} vs SMA {max(periods)}, by percentages\n","-"*30)
+    print(f"\nSMA {min(periods)} vs SMA {max(periods)}, by percentages\n", "-"*30, sep="")
 
     dfs = _divide_zones(df)
     column = f'sma_{min(periods)}_vs_sma_{max(periods)}'
@@ -145,3 +154,38 @@ def plot_lower_sma_vs_higher_sma_pct(df: pd.DataFrame, periods: list[int]) -> No
     title = f"SMA {min(periods)} vs SMA {max(periods)} - Relationship percentage"
 
     _plot_feature(values, labels, title, pct=True)
+
+
+# =============================================================================
+# MOMENTUM MAGNITUDE OF SMA
+# =============================================================================
+
+
+def plot_momentum_magnitude_gap(df: pd.DataFrame, periods: list[int]) -> None:
+
+    print(f"\nMomentum Magnitude Gap, SMA {min(periods)} vs SMA {max(periods)}\n", "-"*30, sep="")
+
+    dfs = _divide_zones(df)
+    column = 'momentum_magnitude_gap'
+
+    values = _make_values_from_dfs(dfs, column, 'std')
+    labels = _get_labels('_std')
+
+    title = f"Momentum Magnitude Gap, SMA {min(periods)} vs SMA {max(periods)}"
+
+    _plot_feature(values, labels, title)
+
+
+def plot_momentum_magnitude_diff(df: pd.DataFrame, periods: list[int], shift: int = 1) -> None:
+
+    print(f"\nMomentum Magnitude Diff, SMA {min(periods)} vs SMA {max(periods)}\n", "-"*30, sep="")
+
+    dfs = _divide_zones(df)
+    column = f'momentum_magnitude_gap_shift_by_{shift}'
+
+    values = _make_values_from_dfs(dfs, column, 'std')
+    labels = _get_labels('_std')
+
+    title = f"Momentum Magnitude Diff, SMA {min(periods)} vs SMA {max(periods)}"
+
+    _plot_feature(values, labels, title)
